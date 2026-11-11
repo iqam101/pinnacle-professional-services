@@ -35,7 +35,7 @@ function extractSlugFromLocation(): string {
 export function BlogPostViewClient({
   initialPost = null,
   initialRelated = [],
-  initialBaseUrl = "https://pinnacleprofessionalservices.lk",
+  initialBaseUrl = "https://pinnacleprofessionalservices.zenthoz.com",
   initialBusinessName = BRAND.legalName,
   slugProp,
 }: {

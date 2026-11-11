@@ -385,7 +385,7 @@ export function BlogManager({
 
               <div className="rounded-xl border border-[#EFE9DD] bg-[#FAF8F5] p-4 space-y-1">
                 <div className="text-xs text-[#006621]">
-                  pinnacleprofessionalservices.lk/blog/
+                  pinnacleprofessionalservices.zenthoz.com/blog/
                   {editing.slug || "article-slug"}
                 </div>
                 <div className="text-base font-medium text-[#1A0DAB] truncate">

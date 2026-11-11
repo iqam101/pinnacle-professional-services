@@ -327,6 +327,40 @@ async function initD1Database(db: D1Database, env: Env): Promise<void> {
       .bind(randomHex(32), now)
       .run();
   }
+
+  const migratedLiveUrl = await db
+    .prepare(
+      "SELECT value FROM settings WHERE key = 'live_site_url_migrated_v1' LIMIT 1"
+    )
+    .first<{ value?: string }>();
+  if (!migratedLiveUrl) {
+    const seoRow = await db
+      .prepare("SELECT value FROM settings WHERE key = 'seo' LIMIT 1")
+      .first<{ value?: string }>();
+    if (seoRow?.value) {
+      const currentSeo = normalizeSeoSettings(seoRow.value);
+      if (currentSeo.canonicalBaseUrl === "https://pinnacleprofessionalservices.lk") {
+        await db
+          .prepare(
+            "UPDATE settings SET value = ?, updated_at = ? WHERE key = 'seo'"
+          )
+          .bind(
+            JSON.stringify({
+              ...currentSeo,
+              canonicalBaseUrl: DEFAULT_SEO_SETTINGS.canonicalBaseUrl,
+            }),
+            now
+          )
+          .run();
+      }
+    }
+    await db
+      .prepare(
+        "INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES ('live_site_url_migrated_v1', '1', ?)"
+      )
+      .bind(now)
+      .run();
+  }
 }
 
 async function ensureDbReady(env: Env): Promise<D1Database> {
@@ -407,11 +441,19 @@ async function getAdminCredentials(
   return { username, passwordHash };
 }
 
-async function getSeoFromD1(db: D1Database): Promise<SeoSettings> {
+async function getSeoFromD1(db: D1Database, env?: Env): Promise<SeoSettings> {
   const row = await db
     .prepare("SELECT value FROM settings WHERE key = 'seo' LIMIT 1")
     .first<{ value?: string }>();
-  return normalizeSeoSettings(row?.value);
+  const seo = normalizeSeoSettings(row?.value);
+  const envPublicUrl = (env?.PUBLIC_SITE_URL || "").trim().replace(/\/+$/, "");
+  if (envPublicUrl) {
+    return {
+      ...seo,
+      canonicalBaseUrl: envPublicUrl,
+    };
+  }
+  return seo;
 }
 
 async function getBannersFromD1(db: D1Database): Promise<BannerSlot[]> {
@@ -607,7 +649,7 @@ async function handleApi(
   if (pathname === "/api/public/bootstrap" && request.method === "GET") {
     const [banners, seo, blogs] = await Promise.all([
       getBannersFromD1(db),
-      getSeoFromD1(db),
+      getSeoFromD1(db, env),
       getPublishedBlogsFromD1(db),
     ]);
     const bannerMap: Record<string, BannerSlot> = {};
@@ -626,7 +668,7 @@ async function handleApi(
     const [blogs, banners, seo, media, inquiries] = await Promise.all([
       getAllBlogsFromD1(db),
       getBannersFromD1(db),
-      getSeoFromD1(db),
+      getSeoFromD1(db, env),
       listMediaFromD1(db),
       listInquiriesFromD1(db),
     ]);
@@ -1094,7 +1136,7 @@ async function handleApi(
   // SEO
   if (pathname === "/api/seo") {
     if (request.method === "GET") {
-      const seo = await getSeoFromD1(db);
+      const seo = await getSeoFromD1(db, env);
       return jsonResponse({ seo }, 200, cors);
     }
 

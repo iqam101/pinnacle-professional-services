@@ -50,12 +50,13 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const seo = getSeoSettings();
-  const baseUrl = seo.canonicalBaseUrl?.trim() || "https://pinnacleprofessionalservices.lk";
+  const baseUrl =
+    seo.canonicalBaseUrl?.trim() || "https://pinnacleprofessionalservices.zenthoz.com";
   let metadataBase: URL | undefined;
   try {
     metadataBase = new URL(baseUrl);
   } catch {
-    metadataBase = new URL("https://pinnacleprofessionalservices.lk");
+    metadataBase = new URL("https://pinnacleprofessionalservices.zenthoz.com");
   }
 
   return {

@@ -115,7 +115,7 @@ export function SeoManager({
         </div>
         <div className="rounded-xl border border-[#EFE9DD] bg-[#FAF8F5] p-5 space-y-1 max-w-2xl">
           <div className="text-xs text-[#006621]">
-            {seo.canonicalBaseUrl || "https://pinnacleprofessionalservices.lk"}
+            {seo.canonicalBaseUrl || "https://pinnacleprofessionalservices.zenthoz.com"}
           </div>
           <div className="text-lg font-medium text-[#1A0DAB] leading-snug">
             {seo.pageOverrides.home?.title || seo.siteTitle}

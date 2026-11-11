@@ -233,7 +233,7 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
     "Your business. Our priority. Pinnacle Professional Services Private Limited in Dehiwala, Colombo offers Company Registration (Rs. 32,000), Bookkeeping, Accountancy, Tax, VAT & TIN, Secretarial, and HR Services across Sri Lanka.",
   defaultKeywords:
     "company registration Sri Lanka, company registration Colombo, bookkeeping Dehiwala, accounting services Sri Lanka, VAT registration Sri Lanka, TIN registration IRD, secretarial services Colombo, HR payroll EPF ETF Sri Lanka, Pinnacle Professional Services",
-  canonicalBaseUrl: "https://pinnacleprofessionalservices.lk",
+  canonicalBaseUrl: "https://pinnacleprofessionalservices.zenthoz.com",
   ogDefaultImage: "/images/banners/hero-office-colombo.jpg",
   twitterHandle: "@pinnacleserviceslk",
   googleVerification: "",
