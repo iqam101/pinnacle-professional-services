@@ -155,11 +155,35 @@ function initDatabase(db: DatabaseSyncType) {
   // Seed default SEO settings if missing
   const existingSeo = db
     .prepare("SELECT value FROM settings WHERE key = 'seo'")
-    .get();
+    .get() as { value?: string } | undefined;
   if (!existingSeo) {
     db.prepare(
       "INSERT INTO settings (key, value, updated_at) VALUES ('seo', ?, ?)"
     ).run(JSON.stringify(DEFAULT_SEO_SETTINGS), DEFAULT_SEO_SETTINGS.updatedAt);
+  } else {
+    const migratedLiveUrl = db
+      .prepare("SELECT value FROM settings WHERE key = 'live_site_url_migrated_v1'")
+      .get();
+    if (!migratedLiveUrl) {
+      const parsedSeo = normalizeSeoSettings(existingSeo.value);
+      const now = new Date().toISOString();
+      if (
+        parsedSeo.canonicalBaseUrl === "https://pinnacleprofessionalservices.lk"
+      ) {
+        db.prepare(
+          "UPDATE settings SET value = ?, updated_at = ? WHERE key = 'seo'"
+        ).run(
+          JSON.stringify({
+            ...parsedSeo,
+            canonicalBaseUrl: DEFAULT_SEO_SETTINGS.canonicalBaseUrl,
+          }),
+          now
+        );
+      }
+      db.prepare(
+        "INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES ('live_site_url_migrated_v1', '1', ?)"
+      ).run(now);
+    }
   }
 
   // Seed default blogs only on initial setup (prevents re-seeding after deliberate deletes)
