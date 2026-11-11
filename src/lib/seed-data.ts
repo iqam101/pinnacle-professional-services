@@ -19,6 +19,25 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
       "Company Registration, Bookkeeping, Accountancy, Tax, VAT & TIN, Secretarial, and HR Solutions tailored for Sri Lankan businesses.",
     ctaLabel: "Start Your Company (Rs. 32,000)",
     ctaHref: "/services/company-registration",
+    enabled: true,
+    updatedAt: NOW,
+  },
+  {
+    key: "popup_banner",
+    label: "Site Entry Pop-up Promo Banner",
+    sectionGroup: "popup",
+    pageLocation: "Site-Wide Pop-up Modal (When Enabled)",
+    imageUrl: "/images/brand/company-registration-flyer.jpg",
+    defaultImageUrl: "/images/brand/company-registration-flyer.jpg",
+    altText:
+      "Pinnacle Professional Services Private Limited Special Incorporation Announcement",
+    badgeText: "Special Offer",
+    headline: "Start Your Pvt Ltd Company All For Rs. 32,000",
+    subheadline:
+      "Complete eROC incorporation with Articles of Association, Form 1, 12, 19, BO 01 & BO 05 registers, bank resolutions, and director seal.",
+    ctaLabel: "Claim Package Now",
+    ctaHref: "/contact?service=company-registration",
+    enabled: false,
     updatedAt: NOW,
   },
   {
@@ -36,6 +55,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
       "From name approval and Articles of Association to Form 1, 12, 19, BO 01 & BO 05 registers, bank resolutions, and director seal.",
     ctaLabel: "Book Incorporation via WhatsApp",
     ctaHref: "/contact?service=company-registration",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -53,6 +73,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
       "Combining statutory company secretarial precision with practical accounting, IRD tax strategy, and modern digital tools.",
     ctaLabel: "Meet Pinnacle Professional Services",
     ctaHref: "/about",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -70,6 +91,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
       "Partner with one dedicated team in Colombo for secretarial compliance, monthly bookkeeping, VAT & TIN filings, payroll, and digital growth.",
     ctaLabel: "Request a Custom Quote",
     ctaHref: "/contact",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -86,6 +108,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
       "Speak directly with our Colombo advisory desk on 077 302 8033 or visit No 15, Samagi Mawatha, Kawdana Road, Dehiwala.",
     ctaLabel: "Schedule a Free Consultation",
     ctaHref: "/contact",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -101,6 +124,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
     subheadline: BRAND.tagline,
     ctaLabel: "Home",
     ctaHref: "/",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -116,6 +140,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
     subheadline: "All-inclusive Private Limited setup for Rs. 32,000.",
     ctaLabel: "Explore Service",
     ctaHref: "/services/company-registration",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -131,6 +156,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
     subheadline: "Form 15 Annual Returns, share transfers, and board resolutions.",
     ctaLabel: "Explore Service",
     ctaHref: "/services/secretarial-services",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -146,6 +172,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
     subheadline: "Monthly management accounts, reconciliations, and audit prep.",
     ctaLabel: "Explore Service",
     ctaHref: "/services/bookkeeping-accountancy",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -161,6 +188,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
     subheadline: "TIN activation, VAT returns, RAMIS filings, and audit liaison.",
     ctaLabel: "Explore Service",
     ctaHref: "/services/tax-vat-tin-auditing",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -176,6 +204,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
     subheadline: "Payroll processing, EPF C-Forms, ETF, and employment contracts.",
     ctaLabel: "Explore Service",
     ctaHref: "/services/hr-payroll-services",
+    enabled: true,
     updatedAt: NOW,
   },
   {
@@ -191,6 +220,7 @@ export const DEFAULT_BANNERS: BannerSlot[] = [
     subheadline: "Modern websites, retail POS software, and lead campaigns.",
     ctaLabel: "Explore Service",
     ctaHref: "/services/digital-business-solutions",
+    enabled: true,
     updatedAt: NOW,
   },
 ];

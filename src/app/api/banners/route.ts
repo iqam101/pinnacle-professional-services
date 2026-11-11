@@ -25,6 +25,7 @@ export async function PUT(request: Request) {
       subheadline?: string;
       ctaLabel?: string;
       ctaHref?: string;
+      enabled?: boolean;
     };
 
     if (!body.key) {
@@ -50,6 +51,7 @@ export async function PUT(request: Request) {
         subheadline: def.subheadline,
         ctaLabel: def.ctaLabel,
         ctaHref: def.ctaHref,
+        enabled: def.enabled,
       });
       revalidatePath("/", "layout");
       revalidatePath("/services");
@@ -65,6 +67,7 @@ export async function PUT(request: Request) {
       subheadline: body.subheadline,
       ctaLabel: body.ctaLabel,
       ctaHref: body.ctaHref,
+      enabled: body.enabled,
     });
 
     if (!updated) {

@@ -1,11 +1,27 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getAdminSession } from "@/lib/auth";
-import { getAllBlogs, getPublishedBlogs, upsertBlog } from "@/lib/db";
+import {
+  getAllBlogs,
+  getBlogBySlug,
+  getPublishedBlogs,
+  upsertBlog,
+} from "@/lib/db";
 import type { BlogStatus } from "@/types/cms";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getAdminSession();
+  const { searchParams } = new URL(request.url);
+  const slug = searchParams.get("slug")?.trim();
+
+  if (slug) {
+    const post = getBlogBySlug(slug);
+    if (!post || (post.status !== "published" && !session)) {
+      return NextResponse.json({ error: "Blog post not found." }, { status: 404 });
+    }
+    return NextResponse.json({ blog: post });
+  }
+
   const posts = session ? getAllBlogs() : getPublishedBlogs();
   return NextResponse.json({ blogs: posts });
 }

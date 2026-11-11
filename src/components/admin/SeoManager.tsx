@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, Globe, Save, Search } from "lucide-react";
+import { cmsApiUrl } from "@/lib/cms-client";
 import type { MediaItem, SeoSettings } from "@/types/cms";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
@@ -33,8 +34,9 @@ export function SeoManager({
     setSaving(true);
     setSavedMsg("");
     try {
-      const res = await fetch("/api/seo", {
+      const res = await fetch(cmsApiUrl("/api/seo"), {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(seo),
       });

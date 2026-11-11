@@ -1,4 +1,8 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Clock,
   Facebook,
@@ -9,8 +13,12 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { BRAND } from "@/lib/constants";
+import { getAdminPortalHref, resolveMediaWithBase } from "@/lib/cms-client";
 import { SERVICES } from "@/lib/services-data";
+import { useCmsLive } from "@/components/CmsLiveProvider";
 import type { SeoSettings } from "@/types/cms";
+
+const emptySubscribe = () => () => {};
 
 interface SiteFooterProps {
   logoUrl: string;
@@ -18,8 +26,31 @@ interface SiteFooterProps {
   seo: SeoSettings;
 }
 
-export function SiteFooter({ logoUrl, logoAlt, seo }: SiteFooterProps) {
+export function SiteFooter({ logoUrl, logoAlt, seo: initialSeo }: SiteFooterProps) {
+  const pathname = usePathname();
+  const { banners, seo: liveSeo, apiBase } = useCmsLive();
   const year = new Date().getFullYear();
+  const adminLinkJson = useSyncExternalStore(
+    emptySubscribe,
+    () => JSON.stringify(getAdminPortalHref()),
+    () => JSON.stringify({ href: "/admin", external: false })
+  );
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
+  const seo = liveSeo || initialSeo;
+  const liveLogo = banners["brand_logo"];
+  const resolvedLogoUrl = resolveMediaWithBase(
+    liveLogo?.imageUrl || logoUrl,
+    apiBase
+  );
+  const resolvedLogoAlt = liveLogo?.altText || logoAlt;
+  const adminLink = JSON.parse(adminLinkJson) as {
+    href: string;
+    external: boolean;
+  };
 
   return (
     <footer className="bg-[#14171C] text-[#D9D5CD] border-t border-[#262A33]">
@@ -36,8 +67,8 @@ export function SiteFooter({ logoUrl, logoAlt, seo }: SiteFooterProps) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={logoUrl}
-                alt={logoAlt}
+                src={resolvedLogoUrl}
+                alt={resolvedLogoAlt}
                 className="h-24 w-auto object-contain mx-auto"
               />
             </Link>
@@ -135,13 +166,25 @@ export function SiteFooter({ logoUrl, logoAlt, seo }: SiteFooterProps) {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/admin"
-                  className="inline-flex items-center gap-1.5 text-[#9AA1AE] hover:text-[#E8B84B]"
-                >
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Admin Portal</span>
-                </Link>
+                {adminLink.external ? (
+                  <a
+                    href={adminLink.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[#9AA1AE] hover:text-[#E8B84B]"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>Admin Portal</span>
+                  </a>
+                ) : (
+                  <Link
+                    href={adminLink.href}
+                    className="inline-flex items-center gap-1.5 text-[#9AA1AE] hover:text-[#E8B84B]"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>Admin Portal</span>
+                  </Link>
+                )}
               </li>
             </ul>
           </div>
@@ -162,13 +205,13 @@ export function SiteFooter({ logoUrl, logoAlt, seo }: SiteFooterProps) {
                   href={BRAND.phoneHref}
                   className="font-semibold text-white hover:text-[#E8B84B]"
                 >
-                  {BRAND.phoneDisplay} / {BRAND.phoneInternational}
+                  {seo.phone || BRAND.phoneDisplay}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-4 w-4 shrink-0 text-[#D79A27]" />
                 <a
-                  href={BRAND.emailHref}
+                  href={`mailto:${seo.email || BRAND.email}`}
                   className="break-all hover:text-[#E8B84B]"
                 >
                   {seo.email || BRAND.email}
@@ -187,10 +230,10 @@ export function SiteFooter({ logoUrl, logoAlt, seo }: SiteFooterProps) {
       <div className="border-t border-[#232730] bg-[#0F1216]">
         <div className="container-fluid py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#8D95A2]">
           <p className="text-center sm:text-left">
-            &copy; {year} {BRAND.legalName}. All rights reserved.
+            &copy; {year} {seo.businessName || BRAND.legalName}. All rights reserved.
           </p>
           <p className="text-center sm:text-right text-[#A8A39A]">
-            {BRAND.tagline} Secretarial, Accounting & Tax Advisory in Dehiwala,
+            {seo.tagline || BRAND.tagline} Secretarial, Accounting & Tax Advisory in Dehiwala,
             Colombo.
           </p>
         </div>

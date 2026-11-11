@@ -14,7 +14,9 @@ import {
   X,
 } from "lucide-react";
 import { BRAND } from "@/lib/constants";
+import { resolveMediaWithBase } from "@/lib/cms-client";
 import { SERVICES } from "@/lib/services-data";
+import { useCmsLive } from "@/components/CmsLiveProvider";
 
 interface SiteHeaderProps {
   logoUrl: string;
@@ -42,12 +44,23 @@ export function SiteHeader({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
+  const { banners, seo, apiBase } = useCmsLive();
 
   if (pathname.startsWith("/admin")) {
     return null;
   }
 
-  const isCustomLogo = Boolean(logoUrl && logoUrl !== defaultLogoUrl);
+  const liveLogo = banners["brand_logo"];
+  const activeLogoRaw = liveLogo?.imageUrl || logoUrl;
+  const activeLogoAlt = liveLogo?.altText || logoAlt;
+  const activeLogoUrl = resolveMediaWithBase(activeLogoRaw, apiBase);
+  const isCustomLogo = Boolean(
+    activeLogoRaw && activeLogoRaw !== defaultLogoUrl
+  );
+  const displayAddress = seo.address || BRAND.shortAddress;
+  const displayPhone = seo.phone || BRAND.phoneDisplay;
+  const displayEmail = seo.email || BRAND.email;
+  const displayFacebook = seo.facebookUrl || BRAND.facebookUrl;
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-[#E6DFD3] shadow-[0_2px_16px_rgba(24,27,32,0.04)]">
@@ -57,7 +70,7 @@ export function SiteHeader({
           <div className="flex items-center gap-3 min-w-0 max-w-full">
             <span className="inline-flex items-center gap-1.5 min-w-0">
               <MapPin className="h-3.5 w-3.5 shrink-0 text-[#D79A27]" />
-              <span className="truncate">{BRAND.shortAddress}</span>
+              <span className="truncate">{displayAddress}</span>
             </span>
             <span className="hidden lg:inline-block text-[#8D95A2]">|</span>
             <span className="hidden lg:inline-block text-[#C9C3B8] shrink-0">
@@ -71,17 +84,17 @@ export function SiteHeader({
               className="inline-flex items-center gap-1.5 font-medium text-white hover:text-[#E8B84B] transition-colors"
             >
               <Phone className="h-3.5 w-3.5 text-[#D79A27]" />
-              <span>{BRAND.phoneDisplay}</span>
+              <span>{displayPhone}</span>
             </a>
             <a
-              href={BRAND.emailHref}
+              href={`mailto:${displayEmail}`}
               className="hidden sm:inline-flex items-center gap-1.5 text-[#E8E4DC] hover:text-[#E8B84B] transition-colors"
             >
               <Mail className="h-3.5 w-3.5 text-[#D79A27]" />
-              <span>{BRAND.email}</span>
+              <span>{displayEmail}</span>
             </a>
             <a
-              href={BRAND.facebookUrl}
+              href={displayFacebook}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Pinnacle Professional Services Facebook Page"
@@ -104,8 +117,8 @@ export function SiteHeader({
           {isCustomLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={logoUrl}
-              alt={logoAlt}
+              src={activeLogoUrl}
+              alt={activeLogoAlt}
               className="h-10 sm:h-12 w-auto max-w-[180px] sm:max-w-[200px] object-contain"
             />
           ) : (
@@ -113,7 +126,7 @@ export function SiteHeader({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/brand/pinnacle-mark.png"
-                alt={logoAlt}
+                alt={activeLogoAlt}
                 width={44}
                 height={44}
                 className="h-9 w-9 sm:h-11 sm:w-11 shrink-0 object-contain transition-transform duration-200 group-hover:scale-105"

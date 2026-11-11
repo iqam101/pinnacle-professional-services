@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { BlogPost, BlogStatus, MediaItem } from "@/types/cms";
+import { cmsApiUrl, resolveCmsMediaUrl } from "@/lib/cms-client";
 import { sanitizeNoEmDash, slugify } from "@/lib/constants";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { MarkdownContent } from "@/components/MarkdownContent";
@@ -133,11 +134,14 @@ export function BlogManager({
       };
 
       const isUpdate = Boolean(editing.id);
-      const url = isUpdate ? `/api/blogs/${editing.id}` : "/api/blogs";
+      const url = cmsApiUrl(
+        isUpdate ? `/api/blogs/${editing.id}` : "/api/blogs"
+      );
       const method = isUpdate ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -168,7 +172,10 @@ export function BlogManager({
   async function handleDelete(id: string) {
     if (!window.confirm("Delete this blog post permanently?")) return;
     try {
-      const res = await fetch(`/api/blogs/${id}`, { method: "DELETE" });
+      const res = await fetch(cmsApiUrl(`/api/blogs/${id}`), {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (res.ok) {
         setBlogs((prev) => prev.filter((b) => b.id !== id));
         setFeedback("Blog post deleted.");
@@ -509,7 +516,7 @@ export function BlogManager({
               {editing.coverImage && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={editing.coverImage}
+                  src={resolveCmsMediaUrl(editing.coverImage)}
                   alt={editing.coverAlt || "Cover preview"}
                   className="h-40 w-full rounded-xl object-cover border border-[#E6DFD3]"
                 />
@@ -588,7 +595,7 @@ export function BlogManager({
             <div className="flex items-start gap-4 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={post.coverImage}
+                src={resolveCmsMediaUrl(post.coverImage)}
                 alt={post.coverAlt || post.title}
                 className="h-20 w-28 shrink-0 rounded-xl object-cover border border-[#E6DFD3]"
               />

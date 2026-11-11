@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getPublishedBlogs, getSeoSettings } from "@/lib/db";
-import { BlogListClient } from "@/components/BlogListClient";
+import { BlogIndexViewClient } from "@/components/views/BlogIndexViewClient";
 
-export const revalidate = 60;
+export const dynamic = "force-static";
 
 export async function generateMetadata(): Promise<Metadata> {
   const seo = getSeoSettings();
@@ -50,7 +50,7 @@ export default function BlogIndexPage() {
 
       <section className="py-14 sm:py-18">
         <div className="container-fluid">
-          <BlogListClient posts={posts} />
+          <BlogIndexViewClient initialPosts={posts} />
         </div>
       </section>
     </div>

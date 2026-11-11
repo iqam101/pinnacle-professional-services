@@ -2,43 +2,70 @@
 
 Official web platform and integrated CMS Admin Portal for **Pinnacle Professional Services Private Limited** (No 15, Samagi Mawatha, Kawdana Road, Dehiwala, Colombo, Sri Lanka).
 
-## Tech Stack
-- **Next.js 16 (App Router) + React 19 + TypeScript** for high-speed server rendering, ISR caching, automatic font optimization, and dynamic SEO metadata.
-- **Tailwind CSS v4** styled around the official Pinnacle Crimson (`#A41C21`), Metallic Gold (`#D79A27`), Charcoal Ink (`#181B20`), and Warm Ivory (`#FAF8F5`) brand palette.
-- **SQLite (`node:sqlite`)** for zero-configuration relational persistence of blogs, banners/images, SEO configuration, uploaded media, and client inquiries (`data/pinnacle.db`).
+## Architecture Modes
+
+This repository supports both **Split Free Hosting (Hostinger Static + Cloudflare Workers + D1)** and **Unified Node Hosting**:
+
+1. **Split Deployment (Zero VPS Cost)**:
+   - **Hostinger Shared Hosting (`dist-hostinger/` and `dist-hostinger.zip`)**: Serves the fast static public website under your domain or subdomain. Client-side live sync fetches updated blogs, banners, entry pop-up announcements, SEO overrides, and uploaded media directly from your Cloudflare Worker via `/cms-config.js`.
+   - **Cloudflare Workers Free Tier (`worker/index.ts` + `dist-cloudflare/`)**: Hosts the `/admin` CMS Portal, API endpoints (`/api/*`), chunked binary image uploads, and serverless **Cloudflare D1** SQL database on a free `*.workers.dev` URL (no VPS or credit card required).
+2. **Unified Node Mode (`npm run dev` / `npm run build` / `npm run start`)**:
+   - Runs both public website and `/admin` CMS from one Node.js server backed by built-in `node:sqlite` (`data/pinnacle.db`).
 
 ## Features
 - **Public Corporate Website**:
-  - Home page with dynamic Hero Banner, Rs. 32,000 All-Inclusive Company Registration showcase & checklist, 6 core service pillars, About section, 4-step workflow, Knowledge Hub blogs, FAQs, and Dehiwala consultation CTA.
-  - Individual SEO-friendly service pages (`/services`, `/services/[slug]`) covering Company Registration, Corporate Secretarial Services, Bookkeeping & Accountancy, Taxation / VAT / TIN / Auditing, HR & Payroll (EPF/ETF), and Websites / POS / Social Media Marketing.
-  - Filterable Blog Hub (`/blog`, `/blog/[slug]`) with Schema.org `BlogPosting` JSON-LD.
-  - Interactive Contact & Consultation Form (`/contact`) with Dehiwala map embed and sticky WhatsApp action button (`+94 77 302 8033`).
-  - Dynamic `/sitemap.xml` and `/robots.txt`.
+  - Home page with dynamic Hero Banner, Rs. 32,000 All-Inclusive Company Registration showcase, 6 core service pillars, About section, 4-step workflow, Knowledge Hub blogs, FAQs, and consultation CTA.
+  - Individual SEO-friendly service pages (`/services`, `/services/[slug]`).
+  - Blog Hub (`/blog`, `/blog/[slug]`, and dynamic `/blog/post/` Apache rewrite shell for newly added CMS posts on static hosting).
+  - Promotional **Visitor Entry Pop-up Banner** controlled from Admin Portal (`Banners & Images -> Pop-up Banner`).
+  - Interactive Contact & Consultation Form (`/contact`) synced with CMS inquiries, Dehiwala map embed, and sticky WhatsApp action button (`+94 77 302 8033`).
 - **Admin CMS Portal (`/admin`)**:
-  - Protected by HMAC-SHA256 signed HttpOnly session cookies (`/admin/login`).
-  - **Blog Manager**: Add, edit, publish/draft, feature, or delete blog posts with live Markdown preview, image uploads, per-post SEO fields, and automatic em-dash cleanup.
-  - **Banners & Website Images**: Upload new images or replace any banner, service card image, flyer, or logo directly from the Admin Portal with instant cache revalidation.
-  - **SEO Settings**: Configure global meta tags, page-specific SEO overrides, Google Search Console verification, GA4 Measurement ID, indexing directives, and LocalBusiness structured data with live SERP preview.
-  - **Media Library & Client Inquiries**: Upload/manage images (`data/uploads/`) and track contact form leads.
+  - Protected by PBKDF2-SHA256 password hashing and HMAC-SHA256 signed HttpOnly session cookies (`/admin/login`).
+  - **Blog Manager**: Create, edit, publish/draft, feature, or delete blog posts with Markdown preview, uploaded cover images, per-post SEO fields, and automatic em-dash cleanup.
+  - **Banners, Logo & Entry Pop-up**: Upload replacement images, edit headlines/CTAs, and toggle the entry pop-up modal.
+  - **SEO Settings**: Configure global meta tags, page overrides, verification tags, GA4 ID, and LocalBusiness Schema.org JSON-LD.
+  - **Media Library & Client Inquiries**: Upload JPG, PNG, WebP, GIF, or SVG images (stored in Cloudflare D1 chunks or optional R2 bucket, or `data/uploads/` locally) and track leads.
 
-## Getting Started
+## Split Deployment Setup
 
-1. Copy `.env.example` to `.env.local` (optional for custom admin credentials):
+### Part 1: Deploy Admin Backend on Cloudflare Workers (Free Tier)
+1. In the Cloudflare Dashboard, open **Workers & Pages -> Create -> Import a repository** and select your GitHub repository.
+2. Cloudflare reads `wrangler.jsonc` automatically:
+   - **Build command**: `npm run build:cloudflare`
+   - **Deploy command**: `npx wrangler deploy`
+3. Open **Storage & Databases -> D1 SQL Database -> Create** (e.g. `pinnacle-cms-db`), then attach it in your Worker under **Settings -> Bindings -> Add -> D1 database** with variable name **`DB`**. (Alternatively run `npx wrangler d1 create pinnacle-cms-db` locally and add `"database_id"` in `wrangler.jsonc`.)
+4. Under **Settings -> Variables and Secrets**, optionally set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `CORS_ORIGINS`, and `PUBLIC_SITE_URL`.
+5. Redeploy if you just attached the D1 binding, then open `https://<your-worker>.workers.dev/admin/login` to confirm D1 readiness and sign in.
+
+### Part 2: Upload Static Frontend to Hostinger Shared Hosting
+1. Run:
    ```bash
-   cp .env.example .env.local
+   npm run build:hostinger
    ```
-2. Install dependencies & run development server:
+   Or set `PINNACLE_API_URL=https://<your-worker>.workers.dev` before running `npm run build:hostinger` to bake the backend URL automatically.
+2. Upload and extract `dist-hostinger.zip` into your Hostinger domain or subdomain folder (`public_html` or subdomain root, including `.htaccess`).
+3. Edit `cms-config.js` in Hostinger File Manager and set:
+   ```js
+   window.__PINNACLE_CONFIG__ = {
+     apiBaseUrl: "https://<your-worker>.workers.dev",
+     adminPortalUrl: "https://<your-worker>.workers.dev/admin/login",
+   };
+   ```
+
+## Local Development
+
+1. Install dependencies & run development server:
    ```bash
    npm install
    npm run dev
    ```
-3. Build and run in production mode:
+2. Build and verify split outputs locally:
    ```bash
-   npm run build
-   npm run start
+   npm run build:hostinger
+   npm run build:cloudflare
    ```
 
 ## Default Admin Login
 - **URL**: `/admin`
-- **Username**: `admin` (or `ADMIN_USERNAME` in `.env.local`)
-- **Password**: `Pinnacle@2026` (or `ADMIN_PASSWORD` in `.env.local`; change anytime inside the **Security** tab of `/admin`)
+- **Username**: `admin` (or `ADMIN_USERNAME`)
+- **Password**: `Pinnacle@2026` (or `ADMIN_PASSWORD`; change anytime inside the **Security** tab of `/admin`)

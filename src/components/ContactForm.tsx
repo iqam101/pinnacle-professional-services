@@ -1,18 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { CheckCircle2, MessageCircle, Send } from "lucide-react";
 import { BRAND } from "@/lib/constants";
+import { cmsApiUrl } from "@/lib/cms-client";
 import { SERVICES } from "@/lib/services-data";
+
+const emptySubscribe = () => () => {};
+
+function resolveServiceParam(raw?: string | null): string {
+  const clean = (raw || "").trim();
+  if (!clean) return "";
+  if (clean === "company-registration") {
+    return "Company Registration (Rs. 32,000 Package)";
+  }
+  return clean;
+}
 
 export function ContactForm({ defaultService = "" }: { defaultService?: string }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [service, setService] = useState(
-    defaultService || "Company Registration (Rs. 32,000 Package)"
+  const queryServiceParam = useSyncExternalStore(
+    emptySubscribe,
+    () => new URLSearchParams(window.location.search).get("service") || "",
+    () => ""
   );
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const service =
+    selectedService ||
+    resolveServiceParam(queryServiceParam) ||
+    resolveServiceParam(defaultService) ||
+    "Company Registration (Rs. 32,000 Package)";
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +44,7 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/inquiries", {
+      const res = await fetch(cmsApiUrl("/api/inquiries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -179,7 +199,7 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
         <select
           id="contact-service"
           value={service}
-          onChange={(e) => setService(e.target.value)}
+          onChange={(e) => setSelectedService(e.target.value)}
           className="w-full rounded-xl border border-[#DFD7C8] bg-white px-4 py-3 text-sm text-[#181B20] focus:border-[#A41C21] focus:outline-none focus:ring-2 focus:ring-[#A41C21]/15"
         >
           <option value="Company Registration (Rs. 32,000 Package)">

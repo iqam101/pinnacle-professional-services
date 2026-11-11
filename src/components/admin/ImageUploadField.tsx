@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Image as ImageIcon, Upload, X } from "lucide-react";
+import { cmsApiUrl, resolveCmsMediaUrl } from "@/lib/cms-client";
 import type { MediaItem } from "@/types/cms";
 
 const BUILTIN_IMAGES = [
@@ -52,8 +53,9 @@ export function ImageUploadField({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/media", {
+      const res = await fetch(cmsApiUrl("/api/media"), {
         method: "POST",
+        credentials: "include",
         body: formData,
       });
       const data = (await res.json()) as { item?: MediaItem; error?: string };
@@ -149,7 +151,7 @@ export function ImageUploadField({
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={m.url}
+                        src={resolveCmsMediaUrl(m.url)}
                         alt={m.altText || m.originalName}
                         className="h-24 w-full object-cover bg-[#FAF8F5]"
                       />

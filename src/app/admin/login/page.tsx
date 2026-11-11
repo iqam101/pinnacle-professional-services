@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Lock, LogIn } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ExternalLink, Lock, LogIn } from "lucide-react";
+import { cmsApiUrl } from "@/lib/cms-client";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -11,14 +12,51 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [dbWarning, setDbWarning] = useState("");
+  const [publicSiteUrl, setPublicSiteUrl] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(cmsApiUrl("/api/health"), { cache: "no-store" })
+      .then(async (res) => {
+        const data = (await res.json()) as {
+          dbReady?: boolean;
+          mode?: string;
+          siteUrl?: string;
+          error?: string;
+        };
+        if (cancelled) return;
+        if (!res.ok || data.dbReady === false) {
+          setDbWarning(
+            data.error ||
+              "Cloudflare D1 database binding (DB) is not ready yet. Attach a D1 database bound as DB in Cloudflare Workers Settings -> Bindings."
+          );
+        }
+        if (data.mode === "cloudflare-worker" && data.siteUrl) {
+          setPublicSiteUrl(data.siteUrl);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDbWarning(
+            "Unable to reach CMS API health check. Ensure the Cloudflare Worker backend is deployed."
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(cmsApiUrl("/api/auth/login"), {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
@@ -65,6 +103,13 @@ export default function AdminLoginPage() {
               inquiries.
             </p>
           </div>
+
+          {dbWarning && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs sm:text-sm text-amber-900 flex items-start gap-2.5">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
+              <span>{dbWarning}</span>
+            </div>
+          )}
 
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -120,13 +165,25 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#646B76] hover:text-[#A41C21]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Return to Public Website</span>
-          </Link>
+          {publicSiteUrl ? (
+            <a
+              href={publicSiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#646B76] hover:text-[#A41C21]"
+            >
+              <span>Open Live Hostinger Website</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          ) : (
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#646B76] hover:text-[#A41C21]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Return to Public Website</span>
+            </Link>
+          )}
         </div>
       </div>
     </div>

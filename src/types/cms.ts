@@ -26,7 +26,7 @@ export interface BlogPost {
 export interface BannerSlot {
   key: string;
   label: string;
-  sectionGroup: "hero" | "sections" | "services" | "brand";
+  sectionGroup: "hero" | "sections" | "services" | "brand" | "popup";
   pageLocation: string;
   imageUrl: string;
   altText: string;
@@ -36,7 +36,13 @@ export interface BannerSlot {
   ctaLabel: string;
   ctaHref: string;
   defaultImageUrl: string;
+  enabled: boolean;
   updatedAt: string;
+}
+
+export interface RuntimeCmsConfig {
+  apiBaseUrl?: string;
+  adminPortalUrl?: string;
 }
 
 export interface PageSeoOverride {

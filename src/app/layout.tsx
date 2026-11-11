@@ -2,8 +2,11 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
-import { getBannerMap, getSeoSettings } from "@/lib/db";
+import { getBannerMap, getPublishedBlogs, getSeoSettings } from "@/lib/db";
+import { DEFAULT_SEO_SETTINGS } from "@/lib/seed-data";
 import { BRAND } from "@/lib/constants";
+import { CmsLiveProvider } from "@/components/CmsLiveProvider";
+import { PopupBannerModal } from "@/components/PopupBannerModal";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
@@ -30,6 +33,22 @@ export const viewport: Viewport = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (process.env.BUILD_TARGET === "cloudflare") {
+    return {
+      title: {
+        default: "Pinnacle Admin CMS Portal",
+        template: "%s | Pinnacle Admin CMS",
+      },
+      description:
+        "Administration portal for Pinnacle Professional Services Private Limited.",
+      robots: {
+        index: false,
+        follow: false,
+        googleBot: { index: false, follow: false },
+      },
+    };
+  }
+
   const seo = getSeoSettings();
   const baseUrl = seo.canonicalBaseUrl?.trim() || "https://pinnacleprofessionalservices.lk";
   let metadataBase: URL | undefined;
@@ -94,8 +113,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isCloudflareAdminBuild = process.env.BUILD_TARGET === "cloudflare";
+  if (isCloudflareAdminBuild) {
+    void DEFAULT_SEO_SETTINGS;
+    return (
+      <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`}>
+        <head>
+          {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+          <script src="/cms-config.js" />
+        </head>
+        <body className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#181B20] antialiased selection:bg-[#A41C21] selection:text-white">
+          <main className="flex-1">{children}</main>
+        </body>
+      </html>
+    );
+  }
+
   const banners = getBannerMap();
   const seo = getSeoSettings();
+  const blogs = getPublishedBlogs();
   const brandLogo = banners["brand_logo"];
   const logoUrl = brandLogo?.imageUrl || "/images/brand/pinnacle-logo-transparent.png";
   const defaultLogoUrl =
@@ -108,6 +144,10 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`}>
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/cms-config.js" />
+      </head>
       <body className="min-h-screen flex flex-col bg-white text-[#181B20] antialiased selection:bg-[#A41C21] selection:text-white">
         {gaId && (
           <>
@@ -121,14 +161,21 @@ export default function RootLayout({
           </>
         )}
         <JsonLd data={buildLocalBusinessSchema(seo)} />
-        <SiteHeader
-          logoUrl={logoUrl}
-          defaultLogoUrl={defaultLogoUrl}
-          logoAlt={logoAlt}
-        />
-        <main className="flex-1">{children}</main>
-        <SiteFooter logoUrl={logoUrl} logoAlt={logoAlt} seo={seo} />
-        <WhatsAppFloat />
+        <CmsLiveProvider
+          initialBanners={banners}
+          initialSeo={seo}
+          initialBlogs={blogs}
+        >
+          <SiteHeader
+            logoUrl={logoUrl}
+            defaultLogoUrl={defaultLogoUrl}
+            logoAlt={logoAlt}
+          />
+          <main className="flex-1">{children}</main>
+          <SiteFooter logoUrl={logoUrl} logoAlt={logoAlt} seo={seo} />
+          <PopupBannerModal />
+          <WhatsAppFloat />
+        </CmsLiveProvider>
       </body>
     </html>
   );

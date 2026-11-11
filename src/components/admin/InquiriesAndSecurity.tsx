@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, KeyRound, MessageCircle } from "lucide-react";
+import { cmsApiUrl } from "@/lib/cms-client";
 import type { InquiryItem } from "@/types/cms";
 
 export function InquiriesAndSecurity({
@@ -20,8 +21,9 @@ export function InquiriesAndSecurity({
   const [savingPw, setSavingPw] = useState(false);
 
   async function updateStatus(id: string, status: InquiryItem["status"]) {
-    const res = await fetch("/api/inquiries", {
+    const res = await fetch(cmsApiUrl("/api/inquiries"), {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status }),
     });
@@ -38,8 +40,9 @@ export function InquiriesAndSecurity({
     setPwErr("");
     setSavingPw(true);
     try {
-      const res = await fetch("/api/auth/password", {
+      const res = await fetch(cmsApiUrl("/api/auth/password"), {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),
       });

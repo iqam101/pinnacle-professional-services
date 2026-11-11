@@ -11,7 +11,7 @@ import { BRAND } from "@/lib/constants";
 import { getSeoSettings } from "@/lib/db";
 import { ContactForm } from "@/components/ContactForm";
 
-export const revalidate = 60;
+export const dynamic = "force-static";
 
 export async function generateMetadata(): Promise<Metadata> {
   const seo = getSeoSettings();
@@ -37,17 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ContactPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ service?: string }>;
-}) {
-  const { service } = await searchParams;
-  const defaultService =
-    service === "company-registration"
-      ? "Company Registration (Rs. 32,000 Package)"
-      : service || "";
-
+export default function ContactPage() {
   return (
     <div className="bg-white">
       <section className="bg-[#FAF8F5] border-b border-[#E6DFD3] py-14 sm:py-16">
@@ -175,7 +165,7 @@ export default async function ContactPage({
               </p>
             </div>
 
-            <ContactForm defaultService={defaultService} />
+            <ContactForm />
           </div>
         </div>
       </section>

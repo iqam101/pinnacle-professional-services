@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, RotateCcw, Save } from "lucide-react";
+import { cmsApiUrl, resolveCmsMediaUrl } from "@/lib/cms-client";
 import type { BannerSlot, MediaItem } from "@/types/cms";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
@@ -34,8 +35,9 @@ export function BannerManager({
     setSavingKey(slot.key);
     setSavedKey(null);
     try {
-      const res = await fetch("/api/banners", {
+      const res = await fetch(cmsApiUrl("/api/banners"), {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           resetToDefault
@@ -49,6 +51,7 @@ export function BannerManager({
                 subheadline: slot.subheadline,
                 ctaLabel: slot.ctaLabel,
                 ctaHref: slot.ctaHref,
+                enabled: slot.enabled,
               }
         ),
       });
@@ -81,6 +84,7 @@ export function BannerManager({
           {[
             { id: "all", label: "All Slots" },
             { id: "hero", label: "Hero" },
+            { id: "popup", label: "Pop-up Banner" },
             { id: "sections", label: "Page Banners" },
             { id: "services", label: "Service Cards" },
             { id: "brand", label: "Brand Logo" },
@@ -111,7 +115,7 @@ export function BannerManager({
               <div className="relative h-52 w-full rounded-xl overflow-hidden border border-[#E6DFD3] bg-[#FAF8F5] flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={slot.imageUrl}
+                  src={resolveCmsMediaUrl(slot.imageUrl)}
                   alt={slot.altText}
                   className={
                     slot.sectionGroup === "brand"
@@ -131,6 +135,28 @@ export function BannerManager({
             </div>
 
             <div className="lg:col-span-8 space-y-4">
+              {slot.sectionGroup === "popup" && (
+                <label className="flex items-start gap-3 rounded-xl border border-[#D79A27]/40 bg-[#FDF8EC] p-3.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(slot.enabled)}
+                    onChange={(e) =>
+                      updateLocal(slot.key, { enabled: e.target.checked })
+                    }
+                    className="mt-0.5 h-4 w-4 rounded accent-[#A41C21]"
+                  />
+                  <div>
+                    <div className="text-sm font-bold text-[#181B20]">
+                      Show Entry Pop-up Banner to Website Visitors
+                    </div>
+                    <p className="text-xs text-[#646B76]">
+                      When enabled, visitors entering the public site see this
+                      promotional announcement modal once per browser session.
+                    </p>
+                  </div>
+                </label>
+              )}
+
               <ImageUploadField
                 label="Banner / Slot Image URL"
                 value={slot.imageUrl}

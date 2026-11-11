@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy, Trash2, Upload } from "lucide-react";
+import { cmsApiUrl, resolveCmsMediaUrl } from "@/lib/cms-client";
 import type { MediaItem } from "@/types/cms";
 
 export function MediaManager({
@@ -24,7 +25,11 @@ export function MediaManager({
       for (const file of Array.from(files)) {
         const fd = new FormData();
         fd.append("file", file);
-        const res = await fetch("/api/media", { method: "POST", body: fd });
+        const res = await fetch(cmsApiUrl("/api/media"), {
+          method: "POST",
+          credentials: "include",
+          body: fd,
+        });
         const data = (await res.json()) as { item?: MediaItem; error?: string };
         if (!res.ok || !data.item) {
           setError(data.error || `Failed uploading ${file.name}`);
@@ -40,7 +45,10 @@ export function MediaManager({
 
   async function handleDelete(item: MediaItem) {
     if (!window.confirm(`Delete ${item.originalName}?`)) return;
-    const res = await fetch(`/api/media/${item.id}`, { method: "DELETE" });
+    const res = await fetch(cmsApiUrl(`/api/media/${item.id}`), {
+      method: "DELETE",
+      credentials: "include",
+    });
     if (res.ok) {
       setMediaItems((prev) => prev.filter((m) => m.id !== item.id));
     }
@@ -103,7 +111,7 @@ export function MediaManager({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={item.url}
+                src={resolveCmsMediaUrl(item.url)}
                 alt={item.altText || item.originalName}
                 className="h-44 w-full object-cover bg-[#FAF8F5]"
               />

@@ -8,6 +8,14 @@ import {
   DEFAULT_BLOGS,
   DEFAULT_SEO_SETTINGS,
 } from "@/lib/seed-data";
+import { CMS_SCHEMA_STATEMENTS } from "@/lib/cms-schema";
+import {
+  mapBannerRow,
+  mapBlogRow,
+  mapInquiryRow,
+  mapMediaRow,
+  normalizeSeoSettings,
+} from "@/lib/cms-mappers";
 import {
   estimateReadTime,
   sanitizeNoEmDash,
@@ -50,11 +58,32 @@ function ensureDirectories() {
 
 export function hashPassword(password: string, salt?: string): string {
   const usedSalt = salt || crypto.randomBytes(16).toString("hex");
-  const derived = crypto.scryptSync(password, usedSalt, 64).toString("hex");
-  return `${usedSalt}:${derived}`;
+  const derived = crypto
+    .pbkdf2Sync(password, Buffer.from(usedSalt, "hex"), 100000, 32, "sha256")
+    .toString("hex");
+  return `pbkdf2$100000$${usedSalt}$${derived}`;
 }
 
 export function verifyPasswordHash(password: string, stored: string): boolean {
+  if (stored.startsWith("pbkdf2$")) {
+    const parts = stored.split("$");
+    if (parts.length !== 4) return false;
+    const iterations = Number(parts[1]);
+    const saltHex = parts[2];
+    const hashHex = parts[3];
+    if (!Number.isFinite(iterations) || !saltHex || !hashHex) return false;
+    const derived = crypto.pbkdf2Sync(
+      password,
+      Buffer.from(saltHex, "hex"),
+      iterations,
+      hashHex.length / 2,
+      "sha256"
+    );
+    const storedBuf = Buffer.from(hashHex, "hex");
+    if (derived.length !== storedBuf.length) return false;
+    return crypto.timingSafeEqual(derived, storedBuf);
+  }
+
   const [salt, hash] = stored.split(":");
   if (!salt || !hash) return false;
   const derived = crypto.scryptSync(password, salt, 64);
@@ -63,86 +92,46 @@ export function verifyPasswordHash(password: string, stored: string): boolean {
   return crypto.timingSafeEqual(derived, storedBuf);
 }
 
+function ensureColumnExists(
+  db: DatabaseSyncType,
+  table: string,
+  column: string,
+  alterSql: string
+) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+    name?: string;
+  }>;
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(alterSql);
+  }
+}
+
 function initDatabase(db: DatabaseSyncType) {
-  db.exec(`
-    PRAGMA journal_mode = WAL;
-    PRAGMA foreign_keys = ON;
+  db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
+  for (const stmt of CMS_SCHEMA_STATEMENTS) {
+    db.exec(stmt);
+  }
 
-    CREATE TABLE IF NOT EXISTS blogs (
-      id TEXT PRIMARY KEY,
-      slug TEXT UNIQUE NOT NULL,
-      title TEXT NOT NULL,
-      category TEXT NOT NULL,
-      excerpt TEXT NOT NULL,
-      content TEXT NOT NULL,
-      cover_image TEXT NOT NULL,
-      cover_alt TEXT NOT NULL,
-      author TEXT NOT NULL,
-      read_time TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'published',
-      featured INTEGER NOT NULL DEFAULT 0,
-      seo_title TEXT NOT NULL DEFAULT '',
-      seo_description TEXT NOT NULL DEFAULT '',
-      seo_keywords TEXT NOT NULL DEFAULT '',
-      og_image TEXT NOT NULL DEFAULT '',
-      canonical_url TEXT NOT NULL DEFAULT '',
-      published_at TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS banners (
-      key TEXT PRIMARY KEY,
-      label TEXT NOT NULL,
-      section_group TEXT NOT NULL,
-      page_location TEXT NOT NULL,
-      image_url TEXT NOT NULL,
-      default_image_url TEXT NOT NULL,
-      alt_text TEXT NOT NULL,
-      badge_text TEXT NOT NULL DEFAULT '',
-      headline TEXT NOT NULL DEFAULT '',
-      subheadline TEXT NOT NULL DEFAULT '',
-      cta_label TEXT NOT NULL DEFAULT '',
-      cta_href TEXT NOT NULL DEFAULT '',
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS settings (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS media (
-      id TEXT PRIMARY KEY,
-      filename TEXT UNIQUE NOT NULL,
-      url TEXT NOT NULL,
-      original_name TEXT NOT NULL,
-      mime_type TEXT NOT NULL,
-      size_bytes INTEGER NOT NULL,
-      alt_text TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS inquiries (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      company_name TEXT NOT NULL DEFAULT '',
-      service TEXT NOT NULL,
-      message TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'new',
-      created_at TEXT NOT NULL
-    );
-  `);
+  // Upgrade older local databases seamlessly without data loss
+  ensureColumnExists(
+    db,
+    "banners",
+    "enabled",
+    "ALTER TABLE banners ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;"
+  );
+  ensureColumnExists(
+    db,
+    "media",
+    "storage_type",
+    "ALTER TABLE media ADD COLUMN storage_type TEXT NOT NULL DEFAULT 'disk';"
+  );
 
   // Seed banners idempotently
   const insertBanner = db.prepare(`
     INSERT OR IGNORE INTO banners (
       key, label, section_group, page_location, image_url, default_image_url,
-      alt_text, badge_text, headline, subheadline, cta_label, cta_href, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      alt_text, badge_text, headline, subheadline, cta_label, cta_href, enabled, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   for (const b of DEFAULT_BANNERS) {
     insertBanner.run(
@@ -158,6 +147,7 @@ function initDatabase(db: DatabaseSyncType) {
       b.subheadline,
       b.ctaLabel,
       b.ctaHref,
+      b.enabled ? 1 : 0,
       b.updatedAt
     );
   }
@@ -172,11 +162,14 @@ function initDatabase(db: DatabaseSyncType) {
     ).run(JSON.stringify(DEFAULT_SEO_SETTINGS), DEFAULT_SEO_SETTINGS.updatedAt);
   }
 
-  // Seed default blogs only if blogs table is completely empty
+  // Seed default blogs only on initial setup (prevents re-seeding after deliberate deletes)
+  const seededRow = db
+    .prepare("SELECT value FROM settings WHERE key = 'blogs_seeded'")
+    .get();
   const blogCountRow = db
     .prepare("SELECT COUNT(*) as count FROM blogs")
     .get() as { count: number } | undefined;
-  if (!blogCountRow || Number(blogCountRow.count) === 0) {
+  if (!seededRow && (!blogCountRow || Number(blogCountRow.count) === 0)) {
     const insertBlog = db.prepare(`
       INSERT INTO blogs (
         id, slug, title, category, excerpt, content, cover_image, cover_alt,
@@ -208,6 +201,9 @@ function initDatabase(db: DatabaseSyncType) {
         post.updatedAt
       );
     }
+    db.prepare(
+      "INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES ('blogs_seeded', '1', ?)"
+    ).run(new Date().toISOString());
   }
 
   // Seed initial admin password hash if not present
@@ -240,49 +236,6 @@ export function getDb(): DatabaseSyncType {
     globalForDb.__pinnacleDbInitialized = true;
   }
   return globalForDb.__pinnacleDb;
-}
-
-function mapBlogRow(row: Record<string, unknown>): BlogPost {
-  return {
-    id: String(row.id),
-    slug: String(row.slug),
-    title: String(row.title),
-    category: String(row.category),
-    excerpt: String(row.excerpt),
-    content: String(row.content),
-    coverImage: String(row.cover_image),
-    coverAlt: String(row.cover_alt),
-    author: String(row.author),
-    readTime: String(row.read_time),
-    status: (row.status === "draft" ? "draft" : "published") as BlogStatus,
-    featured: Number(row.featured) === 1,
-    seoTitle: String(row.seo_title || ""),
-    seoDescription: String(row.seo_description || ""),
-    seoKeywords: String(row.seo_keywords || ""),
-    ogImage: String(row.og_image || ""),
-    canonicalUrl: String(row.canonical_url || ""),
-    publishedAt: String(row.published_at),
-    createdAt: String(row.created_at),
-    updatedAt: String(row.updated_at),
-  };
-}
-
-function mapBannerRow(row: Record<string, unknown>): BannerSlot {
-  return {
-    key: String(row.key),
-    label: String(row.label),
-    sectionGroup: row.section_group as BannerSlot["sectionGroup"],
-    pageLocation: String(row.page_location),
-    imageUrl: String(row.image_url),
-    defaultImageUrl: String(row.default_image_url),
-    altText: String(row.alt_text),
-    badgeText: String(row.badge_text || ""),
-    headline: String(row.headline || ""),
-    subheadline: String(row.subheadline || ""),
-    ctaLabel: String(row.cta_label || ""),
-    ctaHref: String(row.cta_href || ""),
-    updatedAt: String(row.updated_at),
-  };
 }
 
 export const getPublishedBlogs = cache((): BlogPost[] => {
@@ -470,6 +423,7 @@ export function updateBanner(
       | "subheadline"
       | "ctaLabel"
       | "ctaHref"
+      | "enabled"
     >
   >
 ): BannerSlot | null {
@@ -490,6 +444,7 @@ export function updateBanner(
   );
   const nextCtaLabel = sanitizeNoEmDash(patch.ctaLabel ?? current.ctaLabel);
   const nextCtaHref = (patch.ctaHref ?? current.ctaHref).trim();
+  const nextEnabled = patch.enabled !== undefined ? patch.enabled : current.enabled;
 
   db.prepare(
     `
@@ -501,6 +456,7 @@ export function updateBanner(
       subheadline = ?,
       cta_label = ?,
       cta_href = ?,
+      enabled = ?,
       updated_at = ?
     WHERE key = ?
   `
@@ -512,6 +468,7 @@ export function updateBanner(
     nextSubheadline,
     nextCtaLabel,
     nextCtaHref,
+    nextEnabled ? 1 : 0,
     now,
     key
   );
@@ -527,20 +484,7 @@ export const getSeoSettings = cache((): SeoSettings => {
   const row = db
     .prepare("SELECT value FROM settings WHERE key = 'seo' LIMIT 1")
     .get() as { value?: string } | undefined;
-  if (!row?.value) return DEFAULT_SEO_SETTINGS;
-  try {
-    const parsed = JSON.parse(row.value) as Partial<SeoSettings>;
-    return {
-      ...DEFAULT_SEO_SETTINGS,
-      ...parsed,
-      pageOverrides: {
-        ...DEFAULT_SEO_SETTINGS.pageOverrides,
-        ...(parsed.pageOverrides || {}),
-      },
-    };
-  } catch {
-    return DEFAULT_SEO_SETTINGS;
-  }
+  return normalizeSeoSettings(row?.value);
 });
 
 export function updateSeoSettings(patch: Partial<SeoSettings>): SeoSettings {
@@ -601,16 +545,7 @@ export function listMedia(): MediaItem[] {
   const rows = db
     .prepare("SELECT * FROM media ORDER BY created_at DESC")
     .all();
-  return rows.map((r) => ({
-    id: String(r.id),
-    filename: String(r.filename),
-    url: String(r.url),
-    originalName: String(r.original_name),
-    mimeType: String(r.mime_type),
-    sizeBytes: Number(r.size_bytes),
-    altText: String(r.alt_text || ""),
-    createdAt: String(r.created_at),
-  }));
+  return rows.map((r) => mapMediaRow(r));
 }
 
 export function addMedia(item: Omit<MediaItem, "id" | "createdAt">): MediaItem {
@@ -619,8 +554,8 @@ export function addMedia(item: Omit<MediaItem, "id" | "createdAt">): MediaItem {
   const createdAt = new Date().toISOString();
   db.prepare(
     `
-    INSERT INTO media (id, filename, url, original_name, mime_type, size_bytes, alt_text, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO media (id, filename, url, original_name, mime_type, size_bytes, alt_text, storage_type, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'disk', ?)
   `
   ).run(
     id,
@@ -642,16 +577,7 @@ export function deleteMedia(id: string): MediaItem | null {
     .get(id);
   if (!row) return null;
   db.prepare("DELETE FROM media WHERE id = ?").run(id);
-  return {
-    id: String(row.id),
-    filename: String(row.filename),
-    url: String(row.url),
-    originalName: String(row.original_name),
-    mimeType: String(row.mime_type),
-    sizeBytes: Number(row.size_bytes),
-    altText: String(row.alt_text || ""),
-    createdAt: String(row.created_at),
-  };
+  return mapMediaRow(row);
 }
 
 export function listInquiries(): InquiryItem[] {
@@ -659,19 +585,7 @@ export function listInquiries(): InquiryItem[] {
   const rows = db
     .prepare("SELECT * FROM inquiries ORDER BY created_at DESC")
     .all();
-  return rows.map((r) => ({
-    id: String(r.id),
-    name: String(r.name),
-    email: String(r.email),
-    phone: String(r.phone),
-    companyName: String(r.company_name || ""),
-    service: String(r.service),
-    message: String(r.message),
-    status: (r.status === "contacted" || r.status === "resolved"
-      ? r.status
-      : "new") as InquiryItem["status"],
-    createdAt: String(r.created_at),
-  }));
+  return rows.map((r) => mapInquiryRow(r));
 }
 
 export function createInquiry(

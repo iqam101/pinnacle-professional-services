@@ -17,6 +17,16 @@
 /.next/
 /out/
 
+# split build outputs
+/.build-stash/
+/dist-hostinger/
+/dist-cloudflare/
+/dist-hostinger.zip
+
+# cloudflare wrangler local state
+/.wrangler/
+/.wrangler-dryrun/
+
 # production
 /build
 

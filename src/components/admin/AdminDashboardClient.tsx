@@ -14,6 +14,7 @@ import {
   LogOut,
   PanelsTopLeft,
 } from "lucide-react";
+import { cmsApiUrl } from "@/lib/cms-client";
 import type {
   BannerSlot,
   BlogPost,
@@ -64,13 +65,24 @@ export function AdminDashboardClient({
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch(cmsApiUrl("/api/auth/logout"), {
+      method: "POST",
+      credentials: "include",
+    });
     router.push("/admin/login");
     router.refresh();
   }
 
   const publishedCount = blogs.filter((b) => b.status === "published").length;
   const newInquiriesCount = inquiries.filter((i) => i.status === "new").length;
+  const popupSlot = banners.find((b) => b.key === "popup_banner");
+  const isSplitCloudflare =
+    process.env.NEXT_PUBLIC_BUILD_TARGET === "cloudflare" ||
+    (typeof window !== "undefined" &&
+      window.location.hostname.endsWith(".workers.dev"));
+  const externalSiteHref = seo.canonicalBaseUrl?.startsWith("http")
+    ? seo.canonicalBaseUrl
+    : "/";
 
   const tabs: { id: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -109,14 +121,26 @@ export function AdminDashboardClient({
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Link
-              href="/"
-              target="_blank"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#343A46] bg-[#22262E] px-3.5 py-2 text-xs font-bold text-white hover:border-[#D79A27]"
-            >
-              <span>View Website</span>
-              <ExternalLink className="h-3.5 w-3.5 text-[#D79A27]" />
-            </Link>
+            {isSplitCloudflare ? (
+              <a
+                href={externalSiteHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#343A46] bg-[#22262E] px-3.5 py-2 text-xs font-bold text-white hover:border-[#D79A27]"
+              >
+                <span>View Website</span>
+                <ExternalLink className="h-3.5 w-3.5 text-[#D79A27]" />
+              </a>
+            ) : (
+              <Link
+                href="/"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#343A46] bg-[#22262E] px-3.5 py-2 text-xs font-bold text-white hover:border-[#D79A27]"
+              >
+                <span>View Website</span>
+                <ExternalLink className="h-3.5 w-3.5 text-[#D79A27]" />
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleLogout}
@@ -244,6 +268,47 @@ export function AdminDashboardClient({
                   className="rounded-xl border border-[#DFD7C8] bg-[#FAF8F5] px-4 py-2.5 text-sm font-bold text-[#181B20] hover:border-[#A41C21] cursor-pointer"
                 >
                   Upload Images to Media Library
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#E6DFD3] bg-white p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              <div className="space-y-2">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#A41C21]">
+                  Live Sync & Split Hosting
+                </div>
+                <h2 className="font-display text-lg font-bold text-[#181B20]">
+                  Updates Reflect Live on Your Public Website
+                </h2>
+                <p className="text-sm text-[#646B76] leading-relaxed">
+                  Changes saved to blogs, banners, uploaded images, SEO tags,
+                  or the entry pop-up are served straight to your Hostinger
+                  static frontend. Update Canonical Base URL under SEO
+                  Settings whenever your live domain changes.
+                </p>
+                <div className="pt-1 text-xs font-mono text-[#4F5560] break-all">
+                  Live Site URL: {seo.canonicalBaseUrl || "Not configured"}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#EFE9DD] bg-[#FAF8F5] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#646B76]">
+                    Visitor Entry Pop-up Banner
+                  </div>
+                  <div className="font-display text-base font-bold text-[#181B20]">
+                    {popupSlot?.enabled ? "Enabled & Showing on Entry" : "Currently Hidden"}
+                  </div>
+                  <div className="text-xs text-[#646B76]">
+                    {popupSlot?.headline || "Configure promotional announcement popup"}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("banners")}
+                  className="shrink-0 rounded-xl border border-[#D79A27] bg-white px-4 py-2 text-xs font-bold text-[#8E5D09] hover:bg-[#D79A27] hover:text-white transition-colors cursor-pointer"
+                >
+                  Configure Pop-up
                 </button>
               </div>
             </div>
