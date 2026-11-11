@@ -1,35 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, ArrowLeft, ExternalLink, Lock, LogIn } from "lucide-react";
 import { cmsApiUrl } from "@/lib/cms-client";
+
+const emptySubscribe = () => () => {};
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const hydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const [error, setError] = useState("");
   const [dbWarning, setDbWarning] = useState("");
   const [publicSiteUrl, setPublicSiteUrl] = useState("");
+  const isCloudflareTarget = process.env.NEXT_PUBLIC_BUILD_TARGET === "cloudflare";
 
   useEffect(() => {
     let cancelled = false;
     fetch(cmsApiUrl("/api/health"), { cache: "no-store" })
       .then(async (res) => {
-        const data = (await res.json()) as {
+        const raw = await res.text();
+        let data: {
           dbReady?: boolean;
           mode?: string;
           siteUrl?: string;
           error?: string;
-        };
+        } = {};
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          // Non-JSON response handled cleanly below
+        }
         if (cancelled) return;
         if (!res.ok || data.dbReady === false) {
           setDbWarning(
             data.error ||
-              "Cloudflare D1 database binding (DB) is not ready yet. Attach a D1 database bound as DB in Cloudflare Workers Settings -> Bindings."
+              (res.ok
+                ? "Cloudflare D1 database binding (DB) is not ready yet. Attach a D1 database bound as DB in Cloudflare Workers Settings -> Bindings."
+                : `CMS health check failed (HTTP ${res.status}). Ensure the Cloudflare Worker backend is deployed.`)
           );
         }
         if (data.mode === "cloudflare-worker" && data.siteUrl) {
@@ -51,6 +67,7 @@ export default function AdminLoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!hydrated || loading) return;
     setError("");
     setLoading(true);
     try {
@@ -60,13 +77,23 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = (await res.json()) as { error?: string };
+      const raw = await res.text();
+      let data: { error?: string } = {};
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        // Non-JSON error response handled cleanly below
+      }
       if (!res.ok) {
-        setError(data.error || "Invalid credentials.");
+        setError(
+          data.error ||
+            (res.status >= 500
+              ? `Server error while signing in (HTTP ${res.status}). Please retry.`
+              : "Invalid credentials.")
+        );
         return;
       }
-      router.push("/admin");
-      router.refresh();
+      router.push("/admin/");
     } catch {
       setError("Network error while signing in.");
     } finally {
@@ -156,18 +183,24 @@ export default function AdminLoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={!hydrated || loading}
             className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#A41C21] px-5 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-[#821318] disabled:opacity-60 transition-colors cursor-pointer"
           >
             <LogIn className="h-4 w-4" />
-            <span>{loading ? "Signing In..." : "Sign In to Admin Portal"}</span>
+            <span>
+              {!hydrated
+                ? "Connecting to Admin Portal..."
+                : loading
+                  ? "Signing In..."
+                  : "Sign In to Admin Portal"}
+            </span>
           </button>
         </form>
 
         <div className="text-center">
-          {publicSiteUrl ? (
+          {publicSiteUrl || isCloudflareTarget ? (
             <a
-              href={publicSiteUrl}
+              href={publicSiteUrl || "https://pinnacleprofessionalservices.zenthoz.com"}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#646B76] hover:text-[#A41C21]"

@@ -36,14 +36,20 @@ export default function AdminPage() {
     })
       .then(async (res) => {
         if (res.status === 401) {
-          router.replace("/admin/login");
+          router.replace("/admin/login/");
           return;
         }
-        const json = (await res.json()) as Partial<AdminBootstrapPayload> & {
-          error?: string;
-        };
+        const raw = await res.text();
+        let json: Partial<AdminBootstrapPayload> & { error?: string } = {};
+        try {
+          json = JSON.parse(raw);
+        } catch {
+          // Non-JSON response handled cleanly below
+        }
         if (!res.ok || !json.username || !json.seo) {
-          throw new Error(json.error || "Unable to load Admin CMS data.");
+          throw new Error(
+            json.error || `Unable to load Admin CMS data (HTTP ${res.status}).`
+          );
         }
         if (!cancelled) {
           setData(json as AdminBootstrapPayload);
@@ -85,7 +91,7 @@ export default function AdminPage() {
             </button>
             <button
               type="button"
-              onClick={() => router.replace("/admin/login")}
+              onClick={() => router.replace("/admin/login/")}
               className="rounded-xl border border-[#DFD7C8] bg-white px-4 py-2.5 text-sm font-bold text-[#181B20] cursor-pointer"
             >
               Back to Sign In

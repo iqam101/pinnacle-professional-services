@@ -1554,8 +1554,19 @@ const workerHandler = {
       return handleApi(request, url, env);
     }
 
-    if (url.pathname === "/" && request.method === "GET") {
-      return renderLandingHtml(env);
+    if (
+      url.pathname === "/" &&
+      (request.method === "GET" || request.method === "HEAD")
+    ) {
+      const landing = await renderLandingHtml(env);
+      if (request.method === "HEAD") {
+        return new Response(null, {
+          status: landing.status,
+          statusText: landing.statusText,
+          headers: landing.headers,
+        });
+      }
+      return landing;
     }
 
     const assetResponse = await env.ASSETS.fetch(request);

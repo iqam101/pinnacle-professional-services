@@ -69,8 +69,7 @@ export function AdminDashboardClient({
       method: "POST",
       credentials: "include",
     });
-    router.push("/admin/login");
-    router.refresh();
+    router.push("/admin/login/");
   }
 
   const publishedCount = blogs.filter((b) => b.status === "published").length;
@@ -82,7 +81,7 @@ export function AdminDashboardClient({
       window.location.hostname.endsWith(".workers.dev"));
   const externalSiteHref = seo.canonicalBaseUrl?.startsWith("http")
     ? seo.canonicalBaseUrl
-    : "/";
+    : "https://pinnacleprofessionalservices.zenthoz.com";
 
   const tabs: { id: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
