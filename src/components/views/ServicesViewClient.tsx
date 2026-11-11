@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, MessageCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { BRAND } from "@/lib/constants";
 import { SERVICES } from "@/lib/services-data";
 import { CmsImage } from "@/components/CmsImage";
 import { useCmsLive } from "@/components/CmsLiveProvider";
 import { ServiceIcon } from "@/components/ServiceIcon";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import type { BannerSlot } from "@/types/cms";
 
 export function ServicesViewClient({
@@ -134,7 +135,7 @@ export function ServicesViewClient({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-xl border border-[#D79A27] bg-[#FDF8EC] px-5 py-3 text-sm font-bold text-[#8E5D09] hover:bg-[#D79A27] hover:text-white transition-colors"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <WhatsAppIcon variant="brand" className="h-4 w-4 shrink-0" />
                       <span>Inquire via WhatsApp</span>
                     </a>
                   </div>

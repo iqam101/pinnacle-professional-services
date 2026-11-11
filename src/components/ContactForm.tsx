@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { CheckCircle2, MessageCircle, Send } from "lucide-react";
+import { CheckCircle2, Send } from "lucide-react";
 import { BRAND } from "@/lib/constants";
 import { cmsApiUrl } from "@/lib/cms-client";
 import { SERVICES } from "@/lib/services-data";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 const emptySubscribe = () => () => {};
 
@@ -94,7 +95,7 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-white hover:bg-[#1EBE5B] transition-colors"
           >
-            <MessageCircle className="h-4 w-4" />
+            <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
             <span>Chat on WhatsApp Now</span>
           </a>
           <button
@@ -252,7 +253,7 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#D79A27] bg-[#FDF8EC] px-5 py-3.5 text-sm font-bold text-[#8E5D09] hover:bg-[#D79A27] hover:text-white transition-colors"
         >
-          <MessageCircle className="h-4 w-4" />
+          <WhatsAppIcon variant="brand" className="h-4 w-4 shrink-0" />
           <span>Instant WhatsApp</span>
         </a>
       </div>

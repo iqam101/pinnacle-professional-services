@@ -4,12 +4,12 @@ import {
   Facebook,
   Mail,
   MapPin,
-  MessageCircle,
   Phone,
 } from "lucide-react";
 import { BRAND } from "@/lib/constants";
 import { getSeoSettings } from "@/lib/db";
 import { ContactForm } from "@/components/ContactForm";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 export const dynamic = "force-static";
 
@@ -121,7 +121,7 @@ export default function ContactPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-white hover:bg-[#1EBE5B]"
                 >
-                  <MessageCircle className="h-4 w-4" />
+                  <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
                   <span>WhatsApp Us</span>
                 </a>
                 <a

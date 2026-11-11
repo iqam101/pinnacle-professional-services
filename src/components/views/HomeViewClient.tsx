@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   Clock,
   MapPin,
-  MessageCircle,
   Phone,
   ShieldCheck,
   Sparkles,
@@ -19,6 +18,7 @@ import { useCmsLive } from "@/components/CmsLiveProvider";
 import { HomeFaq } from "@/components/HomeFaq";
 import { JsonLd } from "@/components/JsonLd";
 import { ServiceIcon } from "@/components/ServiceIcon";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import type { BannerSlot, BlogPost, ServiceFaq } from "@/types/cms";
 
 const PROCESS_STEPS = [
@@ -143,7 +143,7 @@ export function HomeViewClient({
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#D79A27] bg-white px-5 py-3 text-sm font-bold text-[#181B20] hover:bg-[#FDF8EC] transition-colors whitespace-nowrap"
               >
-                <MessageCircle className="h-5 w-5 shrink-0 text-[#25D366]" />
+                <WhatsAppIcon variant="brand" className="h-5 w-5 shrink-0" />
                 <span>WhatsApp +94 77 302 8033</span>
               </a>
             </div>
@@ -300,7 +300,7 @@ export function HomeViewClient({
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#25D366] bg-[#25D366]/10 px-6 py-3.5 text-sm font-bold text-[#146C34] hover:bg-[#25D366] hover:text-white transition-colors"
                 >
-                  <MessageCircle className="h-4 w-4" />
+                  <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
                   <span>Start via WhatsApp</span>
                 </a>
               </div>
@@ -666,7 +666,7 @@ export function HomeViewClient({
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-4 text-sm font-bold text-white shadow-lg hover:bg-[#1EBE5B] transition-colors"
             >
-              <MessageCircle className="h-5 w-5" />
+              <WhatsAppIcon variant="mono" className="h-5 w-5 shrink-0" />
               <span>WhatsApp 077 302 8033</span>
             </a>
           </div>

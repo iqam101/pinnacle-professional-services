@@ -7,7 +7,6 @@ import {
   Calendar,
   Clock,
   FileX2,
-  MessageCircle,
   User,
 } from "lucide-react";
 import { BRAND } from "@/lib/constants";
@@ -16,6 +15,7 @@ import { CmsImage } from "@/components/CmsImage";
 import { useCmsLive } from "@/components/CmsLiveProvider";
 import { JsonLd } from "@/components/JsonLd";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import type { BlogPost } from "@/types/cms";
 
 const emptySubscribe = () => () => {};
@@ -281,7 +281,7 @@ export function BlogPostViewClient({
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3.5 text-sm font-bold text-white hover:bg-[#1EBE5B]"
               >
-                <MessageCircle className="h-4 w-4" />
+                <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
                 <span>WhatsApp Us</span>
               </a>
               <Link

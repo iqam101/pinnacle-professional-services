@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  MessageCircle,
   Phone,
 } from "lucide-react";
 import { BRAND, COMPANY_REGISTRATION_PACKAGE } from "@/lib/constants";
@@ -14,6 +13,7 @@ import { useCmsLive } from "@/components/CmsLiveProvider";
 import { HomeFaq } from "@/components/HomeFaq";
 import { JsonLd } from "@/components/JsonLd";
 import { ServiceIcon } from "@/components/ServiceIcon";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import type { BannerSlot, ServiceDefinition } from "@/types/cms";
 
 export function ServiceDetailViewClient({
@@ -84,7 +84,7 @@ export function ServiceDetailViewClient({
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-[#1EBE5B] transition-colors"
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
                     <span>WhatsApp +94 77 302 8033</span>
                   </a>
                   <Link
@@ -228,7 +228,7 @@ export function ServiceDetailViewClient({
                     rel="noopener noreferrer"
                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-white hover:bg-[#1EBE5B]"
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
                     <span>WhatsApp {BRAND.whatsappDisplay}</span>
                   </a>
                   <a

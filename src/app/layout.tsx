@@ -10,6 +10,7 @@ import { PopupBannerModal } from "@/components/PopupBannerModal";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
+import { ZenthozBanner } from "@/components/ZenthozBanner";
 import { JsonLd, buildLocalBusinessSchema } from "@/components/JsonLd";
 
 const inter = localFont({
@@ -173,6 +174,7 @@ export default function RootLayout({
             logoAlt={logoAlt}
           />
           <main className="flex-1">{children}</main>
+          <ZenthozBanner />
           <SiteFooter logoUrl={logoUrl} logoAlt={logoAlt} seo={seo} />
           <PopupBannerModal />
           <WhatsAppFloat />

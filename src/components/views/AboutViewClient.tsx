@@ -6,13 +6,13 @@ import {
   Award,
   CheckCircle2,
   MapPin,
-  MessageCircle,
   ShieldCheck,
   Users,
 } from "lucide-react";
 import { BRAND } from "@/lib/constants";
 import { CmsImage } from "@/components/CmsImage";
 import { useCmsLive } from "@/components/CmsLiveProvider";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import type { BannerSlot } from "@/types/cms";
 
 export function AboutViewClient({
@@ -56,7 +56,7 @@ export function AboutViewClient({
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#D79A27] bg-white px-6 py-3.5 text-sm font-bold text-[#181B20] hover:bg-[#FDF8EC]"
               >
-                <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                <WhatsAppIcon variant="brand" className="h-4 w-4 shrink-0" />
                 <span>WhatsApp {BRAND.phoneDisplay}</span>
               </a>
             </div>

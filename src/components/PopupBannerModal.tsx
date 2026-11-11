@@ -3,10 +3,11 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, MessageCircle, Sparkles, X } from "lucide-react";
+import { ArrowRight, Sparkles, X } from "lucide-react";
 import { BRAND } from "@/lib/constants";
 import { resolveMediaWithBase } from "@/lib/cms-client";
 import { useCmsLive } from "@/components/CmsLiveProvider";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 const STORAGE_KEY = "pinnacle_popup_dismissed_at";
 const emptySubscribe = () => () => {};
@@ -175,7 +176,7 @@ export function PopupBannerModal() {
               onClick={dismiss}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#25D366] bg-[#25D366]/10 px-4 py-3 text-sm font-bold text-[#146C34] hover:bg-[#25D366] hover:text-white transition-colors"
             >
-              <MessageCircle className="h-4 w-4" />
+              <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
               <span>WhatsApp</span>
             </a>
           </div>

@@ -2,9 +2,10 @@
 
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowLeft, Compass, Home, MessageCircle } from "lucide-react";
+import { ArrowLeft, Compass, Home } from "lucide-react";
 import { BRAND } from "@/lib/constants";
 import { BlogPostViewClient } from "@/components/views/BlogPostViewClient";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 const emptySubscribe = () => () => {};
 
@@ -78,7 +79,7 @@ export default function NotFoundPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-sm font-bold text-white hover:bg-[#1EBE5B] transition-colors"
           >
-            <MessageCircle className="h-4 w-4" />
+            <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
             <span>WhatsApp Us</span>
           </a>
         </div>

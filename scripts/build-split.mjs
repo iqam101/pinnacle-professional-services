@@ -264,8 +264,9 @@ function runNextBuild(target) {
 
 async function main() {
   const target = process.argv[2];
+  const noZip = process.argv.includes("--no-zip");
   if (target !== "hostinger" && target !== "cloudflare") {
-    console.error("Usage: node scripts/build-split.mjs <hostinger|cloudflare>");
+    console.error("Usage: node scripts/build-split.mjs <hostinger|cloudflare> [--no-zip]");
     process.exit(1);
   }
 
@@ -309,9 +310,13 @@ async function main() {
       );
       const zipPath = path.join(ROOT, "dist-hostinger.zip");
       fs.rmSync(zipPath, { force: true });
-      createZipFromDir(destDir, zipPath);
-      console.log(`Built Hostinger static bundle: ${destDir}`);
-      console.log(`Built uploadable Hostinger archive: ${zipPath}`);
+      if (!noZip) {
+        createZipFromDir(destDir, zipPath);
+        console.log(`Built Hostinger static bundle: ${destDir}`);
+        console.log(`Built uploadable Hostinger archive: ${zipPath}`);
+      } else {
+        console.log(`Built Hostinger static bundle (folder only): ${destDir}`);
+      }
     } else {
       fs.writeFileSync(
         path.join(destDir, "robots.txt"),

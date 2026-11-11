@@ -8,7 +8,6 @@ import {
   Facebook,
   Mail,
   MapPin,
-  MessageCircle,
   Phone,
   ShieldCheck,
 } from "lucide-react";
@@ -16,6 +15,7 @@ import { BRAND } from "@/lib/constants";
 import { getAdminPortalHref, resolveMediaWithBase } from "@/lib/cms-client";
 import { SERVICES } from "@/lib/services-data";
 import { useCmsLive } from "@/components/CmsLiveProvider";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import type { SeoSettings } from "@/types/cms";
 
 const emptySubscribe = () => () => {};
@@ -93,9 +93,9 @@ export function SiteFooter({ logoUrl, logoAlt, seo: initialSeo }: SiteFooterProp
                 href={BRAND.whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-[#0F2918] hover:bg-[#20BD5A] transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1EBE5B] transition-colors"
               >
-                <MessageCircle className="h-4 w-4" />
+                <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
                 <span>WhatsApp +94 77 302 8033</span>
               </a>
             </div>

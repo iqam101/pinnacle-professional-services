@@ -9,7 +9,6 @@ import {
   Mail,
   MapPin,
   Menu,
-  MessageCircle,
   Phone,
   X,
 } from "lucide-react";
@@ -17,6 +16,7 @@ import { BRAND } from "@/lib/constants";
 import { resolveMediaWithBase } from "@/lib/cms-client";
 import { SERVICES } from "@/lib/services-data";
 import { useCmsLive } from "@/components/CmsLiveProvider";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 interface SiteHeaderProps {
   logoUrl: string;
@@ -65,7 +65,7 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-[#E6DFD3] shadow-[0_2px_16px_rgba(24,27,32,0.04)]">
       {/* Top Utility Bar */}
-      <div className="bg-[#181B20] text-[#E8E4DC] text-[11px] sm:text-xs">
+      <div className="hidden md:block bg-[#181B20] text-[#E8E4DC] text-xs">
         <div className="container-fluid flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
           <div className="flex items-center gap-3 min-w-0 max-w-full">
             <span className="inline-flex items-center gap-1.5 min-w-0">
@@ -218,7 +218,7 @@ export function SiteHeader({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl border border-[#D79A27] bg-[#FDF8EC] px-3.5 py-2.5 text-sm font-semibold text-[#8E5D09] hover:bg-[#D79A27] hover:text-white transition-colors"
           >
-            <MessageCircle className="h-4 w-4" />
+            <WhatsAppIcon variant="brand" className="h-4 w-4 shrink-0" />
             <span>WhatsApp</span>
           </a>
           <Link
@@ -238,7 +238,7 @@ export function SiteHeader({
             aria-label="WhatsApp Pinnacle Professional Services"
             className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#25D366] text-white shadow-sm"
           >
-            <MessageCircle className="h-5 w-5" />
+            <WhatsAppIcon variant="mono" className="h-5 w-5 shrink-0" />
           </a>
           <button
             type="button"
@@ -320,7 +320,7 @@ export function SiteHeader({
                   : "text-[#181B20]"
               }`}
             >
-              Company Registration (Rs. 32,000)
+              Company Registration
             </Link>
             <Link
               href="/blog"
@@ -370,7 +370,7 @@ export function SiteHeader({
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 rounded-xl bg-[#A41C21] py-3 px-4 text-sm font-semibold text-white"
               >
-                <MessageCircle className="h-4 w-4" />
+                <WhatsAppIcon variant="mono" className="h-4 w-4 shrink-0" />
                 <span>WhatsApp Consultation</span>
               </a>
             </div>

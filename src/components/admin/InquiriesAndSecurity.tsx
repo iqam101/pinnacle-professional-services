@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, KeyRound, MessageCircle } from "lucide-react";
+import { CheckCircle2, KeyRound } from "lucide-react";
 import { cmsApiUrl } from "@/lib/cms-client";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import type { InquiryItem } from "@/types/cms";
 
 export function InquiriesAndSecurity({
@@ -195,7 +196,7 @@ export function InquiriesAndSecurity({
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3 py-1.5 text-xs font-bold text-white"
                       >
-                        <MessageCircle className="h-3.5 w-3.5" />
+                        <WhatsAppIcon variant="mono" className="h-3.5 w-3.5 shrink-0" />
                         <span>Reply</span>
                       </a>
                     )}
